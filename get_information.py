@@ -17,6 +17,7 @@ def authorization(login, password): #авторизация на сайт
 def get_schedule(user_href): #получить расписание
     lesson_classes = ['lesson lesson-att', 'lesson lesson-test', 'lesson lesson-practice', 'lesson', 'lesson lesson-lecture']
     useless = ['1','2','3','4','5','6','7','8','9','0','В']
+    days_shedule = []
     for i in range(-5, 6):
         if i != 0:
             driver.get(f'{user_href}?offset={i}')
@@ -24,23 +25,28 @@ def get_schedule(user_href): #получить расписание
             driver.get(user_href)
         html = driver.page_source
         soup = BeautifulSoup(html, "html.parser")
-        for lesson in soup.find_all("div", class_="list-group-item"):
-            time = lesson.find("div", class_="lesson-time").get_text()
-            for lesson_class in lesson_classes:
-                if(lesson.find("div", class_=lesson_class) is not None):
-                    lesson_div = lesson.find("div", class_=lesson_class)
-                    info = list(filter(lambda a: a != '', lesson_div.get_text().split('\n')))
-                    if info[2] in useless:
-                        info.pop(2)
-                    type = info[1]
-                    lesson_name = info[2]
-                    audience = lesson_div.find("div", class_="pull-right").find("a", class_="text-nowrap").get_text()
-                    teacher = lesson_div.find("span", class_="text-nowrap").find("a", class_="text-nowrap").get_text()
-                    skype = lesson_div.find("span", class_="text-nowrap").find("a", class_="text-skype").get("href")
-                    break
-            print(time, lesson_name, type, audience, teacher, skype)
-        print("-----------------")
-
-
-
-authorization("ggg003","grig1001")
+        day_shedule = []
+        for index, lesson in enumerate(soup.find_all("div", class_="list-group-item")):
+            time = lesson.find("div", class_="lesson-time").get_text().replace("\xa0"," ")
+            lesson_was = lesson.find_all("div", class_="lesson-was")
+            for item in lesson_was:
+                for lesson_class in lesson_classes:
+                    if (item.find("div", class_=lesson_class) is not None):
+                        lesson_div = item.find("div", class_=lesson_class)
+                        info = list(filter(lambda a: a != '', lesson_div.get_text().split('\n')))
+                        if info[2] in useless:
+                            info.pop(2)
+                        type = info[1]
+                        lesson_name = info[2]
+                        audience = lesson_div.find("div", class_="pull-right").find("a", class_="text-nowrap").get_text()
+                        teachers = []
+                        for teacher in lesson_div.find_all("span", class_="text-nowrap"):
+                            skypes = []
+                            skypes.append(teacher.find("a", class_="text-nowrap").get_text().replace("\xa0", " "))
+                            for item in teacher.find_all("a", class_="text-skype"):
+                                skypes.append(item.get("href"))
+                            teachers.append(skypes)
+                        day_shedule.append([index, time, type, lesson_name, teachers, audience])
+                        break
+        days_shedule.append(day_shedule)
+    return days_shedule
