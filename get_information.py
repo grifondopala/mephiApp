@@ -6,19 +6,22 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
-def authorization(login, password): #авторизация на сайт
+def authorization(login, password, my_range): #авторизация на сайт
     driver.get("https://home.mephi.ru/")
-    driver.find_element(By.XPATH, "/html/body/div/div[1]/div/div/form/button").submit() #первая кнопка входа
+    driver.find_element(By.XPATH, "/html/body/div/div[1]/div/div/form/button").submit() #первая кнопка входаl
     driver.find_element(By.XPATH, "//*[@id=\"username\"]").send_keys(login) #ввод логина
     driver.find_element(By.XPATH, "//*[@id=\"password\"]").send_keys(password) #ввод пароля
     driver.find_element(By.XPATH, "//*[@id=\"login-form\"]/div[3]/button").submit()  # вторая кнопка входа
-    return get_schedule(driver.current_url)
+    if driver.current_url == "https://auth.mephi.ru/login":
+        return "Неверный логин или пароль"
+    else:
+        return get_schedule(driver.current_url, my_range)
 
-def get_schedule(user_href): #получить расписание
+def get_schedule(user_href, my_range): #получить расписание
     lesson_classes = ['lesson lesson-att', 'lesson lesson-test', 'lesson lesson-practice', 'lesson', 'lesson lesson-lecture']
     useless = ['1','2','3','4','5','6','7','8','9','0','В']
     days_shedule = []
-    for i in range(-5, 6):
+    for i in my_range:
         if i != 0:
             driver.get(f'{user_href}?offset={i}')
         else:
